@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 
 /**
- *
+ * 实现github登录操作
  */
 
 @Component
