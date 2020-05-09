@@ -2,6 +2,8 @@ package com.containment.community.controller;
 
 import com.containment.community.dto.AccessTokenDTO;
 import com.containment.community.dto.GithubUser;
+import com.containment.community.mapper.UserMapper;
+import com.containment.community.model.User;
 import com.containment.community.provider.GithubProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -11,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
+import java.util.UUID;
 
 @Controller
 public class AuthorizeController {
@@ -25,6 +28,10 @@ public class AuthorizeController {
     @Value("${github.redirect.uri}")
     private String redirectUri;
 
+    @Autowired
+    private UserMapper userMapper;
+
+
     @GetMapping("/callback")
     public String callback(@RequestParam(name = "code") String code,
                            @RequestParam(name = "state") String state,
@@ -36,11 +43,18 @@ public class AuthorizeController {
         accessTokenDTO.setClient_secret(clientSecret);
         accessTokenDTO.setRedirect_uri(redirectUri);
         String accessToken = githubProvider.getAccessToken(accessTokenDTO);
-        GithubUser user = githubProvider.getUser(accessToken);
+        GithubUser githubUser = githubProvider.getUser(accessToken);
 
-        if (user!=null){
+        if (githubUser!=null){
+            User user = new User();
+            user.setToken(UUID.randomUUID().toString());
+            user.setAccountId(String.valueOf(githubUser.getId()));
+            user.setName(githubUser.getName());
+            user.getGmtCreate(System.currentTimeMillis());
+            user.getGmtModified(user.getGmtCreate(System.currentTimeMillis()));
+            userMapper.insert(user);
             HttpSession session = request.getSession();
-            session.setAttribute("user",user);
+            session.setAttribute("user",githubUser);
 //            登录成功，写cookie和session
             return "redirect:/";
         }else {
