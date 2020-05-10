@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
+import java.util.Calendar;
 import java.util.UUID;
 
 @Controller
@@ -50,9 +51,15 @@ public class AuthorizeController {
             user.setToken(UUID.randomUUID().toString());
             user.setAccountId(String.valueOf(githubUser.getId()));
             user.setName(githubUser.getName());
-            user.getGmtCreate(System.currentTimeMillis());
-            user.getGmtModified(user.getGmtCreate(System.currentTimeMillis()));
+
+            Calendar calendar = Calendar.getInstance();
+            long timeInMillis = calendar.getTimeInMillis();
+            user.setGmtCreate(timeInMillis);
+            user.getGmtCreate();
+            user.setGmtModified(timeInMillis);
+            user.getGmtModified();
             userMapper.insert(user);
+
             HttpSession session = request.getSession();
             session.setAttribute("user",githubUser);
 //            登录成功，写cookie和session
